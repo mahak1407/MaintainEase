@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBars, FaTimes, FaUser, FaSignInAlt, FaUserPlus, FaHome, FaInfoCircle, FaEnvelope, FaBuilding, FaGem } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useAuth();
+  const isLoggedIn = Boolean(user);
 
   const navLinks = [
     { name: "Home", path: "/", icon: FaHome },
@@ -42,9 +44,12 @@ const Navbar = () => {
             
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <button className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:shadow-md transition">
+                <Link
+                  to="/dashboard"
+                  className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:shadow-md transition"
+                >
                   Dashboard
-                </button>
+                </Link>
                 <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                   <FaUser className="text-slate-600" />
                 </div>
@@ -91,9 +96,13 @@ const Navbar = () => {
             ))}
             
             {isLoggedIn ? (
-              <button className="w-full mt-4 bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-2 rounded-lg">
+              <Link
+                to="/dashboard"
+                className="block w-full mt-4 text-center bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-2 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
                 Dashboard
-              </button>
+              </Link>
             ) : (
               <div className="space-y-3 mt-4">
                 <Link

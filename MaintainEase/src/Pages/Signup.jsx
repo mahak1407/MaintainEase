@@ -11,19 +11,30 @@ import {
   FaSpinner
 } from "react-icons/fa";
 
-import { validateEmail,validateConfirmPassword,validatePassword ,isNumberOnly,isCharacterOnly} from "../utils/validation";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  validateEmail,
+  validateConfirmPassword,
+  validatePassword,
+  isNumberOnly,
+  isCharacterOnly,
+  validatePhone,
+} from "../utils/validation";
+import { useAuth } from "../context/AuthContext";
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
     unit: "",
-    role: "Resident",
     password: "",
     confirmPassword: ""
   });
@@ -55,25 +66,31 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setApiError("");
+
     if (validateForm()) {
       setIsSubmitting(true);
-      
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Form Submitted:", form);
-        alert("Account created successfully!");
+      try {
+        await register({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          apartmentNumber: form.unit,
+          password: form.password,
+        });
+        navigate("/dashboard");
+      } catch (err) {
+        setApiError(err.response?.data?.message || "Registration failed. Try a different email.");
+      } finally {
         setIsSubmitting(false);
-        // Reset form if needed
-        // setForm({ name: "", email: "", phone: "", unit: "", role: "Resident", password: "", confirmPassword: "" });
-      }, 1500);
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* LEFT PANEL */}
-      <div className="lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white flex flex-col justify-center items-center p-8 lg:p-12 relative overflow-hidden">
+      <div className="lg:w-1/2 bg-gradient-to-br from-teal-600 via-blue-600 to-slate-800 text-white flex flex-col justify-center items-center p-8 lg:p-12 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
           <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full filter blur-3xl"></div>
           <div className="absolute bottom-10 right-10 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
@@ -119,7 +136,7 @@ const SignupPage = () => {
       </div>
 
       {/* RIGHT PANEL */}
-      <div className="lg:w-1/2 bg-gradient-to-br from-gray-50 to-gray-100 flex justify-center items-center p-6 lg:p-10">
+      <div className="lg:w-1/2 bg-gradient-to-br from-slate-50 via-teal-50/30 to-blue-50/40 flex justify-center items-center p-6 lg:p-10">
         <div className="bg-white rounded-2xl shadow-2xl p-6 lg:p-10 w-full max-w-lg">
           
           <div className="text-center mb-8">
@@ -131,18 +148,24 @@ const SignupPage = () => {
             </p>
           </div>
 
+          {apiError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm px-4 py-3">
+              {apiError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* FULL NAME */}
             <div>
               <div className="relative group">
-                <FaUser className="absolute left-3 top-3 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                <FaUser className="absolute left-3 top-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type="text"
                   name="name"
                   placeholder="Full Name"
                   value={form.name}
                   onChange={handleChange}
-                  className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all
+                  className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all
                     ${errors.name ? "border-red-500" : "border-gray-200"}`}
                 />
               </div>
@@ -154,14 +177,14 @@ const SignupPage = () => {
             {/* EMAIL */}
             <div>
               <div className="relative group">
-                <FaEnvelope className="absolute left-3 top-3 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                <FaEnvelope className="absolute left-3 top-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type="email"
                   name="email"
                   placeholder="Email Address"
                   value={form.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all
+                  className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all
                     ${errors.email ? "border-red-500" : "border-gray-200"}`}
                 />
               </div>
@@ -170,52 +193,52 @@ const SignupPage = () => {
               )}
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Phone</label>
+              <PhoneInput
+                country={"in"}
+                value={form.phone}
+                onChange={handlePhoneChange}
+                inputClass={`!w-full !pl-12 !py-3 !rounded-xl !border-2 ${
+                  errors.phone ? "!border-red-500" : "!border-gray-200"
+                }`}
+                buttonClass="!rounded-l-xl !border-r-0"
+                dropdownClass="!text-left"
+              />
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            </div>
 
-            {/* UNIT + ROLE */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="relative group">
-                  <FaHome className="absolute left-3 top-3 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="text"
-                    name="unit"
-                    placeholder="Unit #"
-                    value={form.unit}
-                    onChange={handleChange}
-                    className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all
-                      ${errors.unit ? "border-red-500" : "border-gray-200"}`}
-                  />
-                </div>
-                {errors.unit && (
-                  <p className="text-red-500 text-xs mt-1">{errors.unit}</p>
-                )}
-              </div>
-
-              <div>
-                <select
-                  name="role"
-                  value={form.role}
+            {/* UNIT */}
+            <div>
+              <div className="relative group">
+                <FaHome className="absolute left-3 top-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                <input
+                  type="text"
+                  name="unit"
+                  placeholder="Apartment / unit number"
+                  value={form.unit}
                   onChange={handleChange}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                >
-                  <option value="Resident">🏠 Resident</option>
-                  <option value="Technician">🔧 Technician</option>
-                  <option value="Admin">👑 Admin</option>
-                </select>
+                  className={`w-full pl-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all
+                    ${errors.unit ? "border-red-500" : "border-gray-200"}`}
+                />
               </div>
+              {errors.unit && <p className="text-red-500 text-xs mt-1">{errors.unit}</p>}
+              <p className="text-xs text-slate-500 mt-2">
+                Staff accounts (technician, admin) are created by your administrator for security.
+              </p>
             </div>
 
             {/* PASSWORD */}
             <div>
               <div className="relative group">
-                <FaLock className="absolute left-3 top-3 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                <FaLock className="absolute left-3 top-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   value={form.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all
+                  className={`w-full pl-10 pr-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all
                     ${errors.password ? "border-red-500" : "border-gray-200"}`}
                 />
                 <button
@@ -237,14 +260,14 @@ const SignupPage = () => {
             {/* CONFIRM PASSWORD */}
             <div>
               <div className="relative group">
-                <FaLock className="absolute left-3 top-3 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                <FaLock className="absolute left-3 top-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type={showConfirm ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Confirm Password"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all
+                  className={`w-full pl-10 pr-10 p-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all
                     ${errors.confirmPassword ? "border-red-500" : "border-gray-200"}`}
                 />
                 <button
@@ -264,7 +287,7 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+              className="w-full bg-gradient-to-r from-teal-600 to-blue-600 text-white p-3 rounded-xl font-semibold hover:opacity-95 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -300,9 +323,9 @@ const SignupPage = () => {
 
           <p className="text-center text-gray-500 mt-8">
             Already have an account?{" "}
-            <a href="/login" className="text-indigo-600 hover:text-indigo-700 font-semibold hover:underline">
+            <Link to="/login" className="text-teal-600 hover:text-teal-800 font-semibold hover:underline">
               Login
-            </a>
+            </Link>
           </p>
         </div>
       </div>
